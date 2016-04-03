@@ -108,7 +108,7 @@ class HashtagGraph:
        self.outputfile_open(output_filename)
        #self.outputfile.write("\n".join(str(self.list_avg_Degree)))
        for num in self.list_avg_Degree:
-            print >> self.outputfile, "{0:.3f}\n".format(num)
+            print >> self.outputfile, "{0:.3f}".format(num)
 
 
    def file_close(self):
