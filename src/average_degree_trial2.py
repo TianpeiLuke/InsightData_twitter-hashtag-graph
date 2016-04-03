@@ -59,9 +59,11 @@ class HashtagGraph:
            self.graph_grow(hashtags, created_at)
            self.list_avg_Degree.append(float(self.num_total_degree) / float(self.num_nodes))
            print("Total nodes {0:3d}  Total Degrees {1:5d}".format(self.num_nodes, self.num_total_degree)) 
-           print("Degree distribution: ")
-           print(self.hash_nodeDegree) 
-
+           if len(self.hash_nodeDegree) > 0:
+              print("Degree distribution: ")
+              print(self.hash_nodeDegree) 
+           else:
+              print("Empty graph")
 
        self.inputfile.close()
 
@@ -100,21 +102,19 @@ class HashtagGraph:
            except KeyError:
                self.hash_nodeDegree[hashtag] = len(hashtags) - 1
                self.num_total_degree = self.num_total_degree + len(hashtags) - 1 
-               #store the incremental degree and time
+               #store the history of the incremental degree and time
                s_temp = HashtagState(created_at = timestamp, degree_increase = len(hashtags) - 1)
                q_temp = deque([s_temp])
-               #q_temp.put(s_temp)
                self.hash_nodeIncrease[hashtag] = q_temp
            else:
                if (num_newnodes + node_degree_adjust[hashtag]) > 0 :
                   self.hash_nodeDegree[hashtag] = self.hash_nodeDegree[hashtag] + node_degree_adjust[hashtag]
                   self.num_total_degree = self.num_total_degree + num_newnodes + node_degree_adjust[hashtag] 
-                  #store the incremental degree and time
+                  #store the history of the incremental degree and time
                   s_temp = HashtagState(created_at = timestamp, degree_increase = num_newnodes + node_degree_adjust[hashtag])
                   self.hash_nodeIncrease[hashtag].append(s_temp)
                
          
-
        return
 
 
@@ -126,22 +126,18 @@ class HashtagGraph:
            For each node, see the top of the queue, if the time is out of the 60 second window, pop the queue, use decrease the degree according to the degree_increase value
 
        '''
-       # delete all out of window
-       # add here
-       try:
-           hashtag_hist_node = self.queue_hist_hashtags[0]
-       except IndexError:
+       if len(self.queue_hist_hashtags) == 0:
            return 
 
        while( not is_valid(self.queue_hist_hashtags[0].created_at, time_stamp)):
-           self.queue_hist_hashtags.popleft()
+           self.queue_hist_hashtags.popleft() #delete all out-of-window cases
            if len(self.queue_hist_hashtags) == 0:
               break
 
        delete_node = []
        for hashtag, queue in self.hash_nodeIncrease.iteritems():
            while( not is_valid(queue[0].created_at, time_stamp)):
-           
+              #delete all out-of-window cases
               #if out of window, we should delete it
               print("Adjust degree of node " + hashtag)
               s_temp = queue.popleft() # add more
