@@ -12,8 +12,6 @@ class HashtagState:
     def __init__(self, created_at, degree_increase):
        self.created_at = created_at 
        self.degree_increase = degree_increase
-#       for hashtag in hashtags:
-#           self.queue_node = 
 
 class HashtagGraph:
    '''
@@ -30,15 +28,6 @@ class HashtagGraph:
        self.minimum_timestamp = parse("Mon Jan 01 00:00:00 +0000 3000", fuzzy=True)
 
 
-
-#   def graph_construct(self, input_filename):
-#       self.inputfile_open(input_filename)
-#       #read the first tweet and construct the graph
-#       tweet_line = self.inputfile.readline().replace('\n','')
-#       hashtag_one_tweet, created_at_one_tweet  = parse_tweet(tweet_line)
-#       #add code here
-
-
    def run(self, input_filename):
        '''
      
@@ -46,23 +35,28 @@ class HashtagGraph:
        '''
        if(self.inputfile_open(input_filename) == False):
            return 
- 
+       count = 0
        for tweet_line in self.inputfile:
            # parse tweet line
+           count = count + 1
+           print("Line: {0:d}".format(count))
            hashtags, created_at = parse_tweet(tweet_line)
-           if parse_time(created_at) > self.maximum_timestamp:
-               self.maximum_timestamp = parse_time(created_at)
-           #if parse_time(created_at) < self.minimum_timestamp:
-           #    self.minimum_timestamp = parse_time(created_at)
-           # see if the created_at is over the 60 second slot
-           # self.queue_hist.put(HashtagState(hashtags, created_at))
-           # add code here 
-           # 
+           timestamp = parse_time(created_at)
+           if timestamp > self.maximum_timestamp:
+               self.maximum_timestamp = timestamp
+               # graph check and prunning only when the time window moves
+               self.graph_prune(timestamp)
+           elif not is_valid(timestamp, self.maximum_timestamp):
+               #out of 60 second window
+               print("out of order in time and are outside the 60-second")
+               continue
+
            # grow graph
            self.graph_grow(hashtags, created_at)
            self.list_avg_Degree.append(float(self.num_total_degree) / float(self.num_nodes))
-          
-        
+           print("Total nodes {0:3d}  Total Degrees {1:5d}".format(self.num_nodes, self.num_total_degree)) 
+           print(self.hash_nodeDegree) 
+
        self.inputfile.close()
 
 
@@ -76,11 +70,9 @@ class HashtagGraph:
        if len(hashtags) == 1:
            #drop single hashtag
            return 
-       
+
+       # find the number of new nodes and parse current time
        num_newnodes = self.count_new_nodes(hashtags)
-       if num_newnodes == 0:
-          return
-       
        timestamp = parse_time(created_at)
        print("Add {0:3d} nodes".format(num_newnodes))
        self.num_nodes = self.num_nodes + num_newnodes
@@ -97,19 +89,52 @@ class HashtagGraph:
                #q_temp.put(s_temp)
                self.hash_nodeIncrease[hashtag] = q_temp
            else:
-               self.num_total_degree = self.num_total_degree + num_newnodes 
-               #store the incremental degree and time
-               s_temp = HashtagState(created_at = timestamp, degree_increase = num_newnodes)
-               self.hash_nodeIncrease[hashtag].append(s_temp)
+               if num_newnodes > 0:
+                  self.num_total_degree = self.num_total_degree + num_newnodes 
+                  #store the incremental degree and time
+                  s_temp = HashtagState(created_at = timestamp, degree_increase = num_newnodes)
+                  self.hash_nodeIncrease[hashtag].append(s_temp)
                
-               #self.hash_nodeIncrease[hashtag].put(s_temp)
+       #make up for new edges whose both ends exists.
+       #note that no new node is added, but the num_total_degree is increased
+       #hash_nodeIncrease and hash_nodeDegree both increases
+       if num_newnodes == 0:
+           print("No new nodes, check for new edges.")
+         
+
        return
+
+
 
    def graph_prune(self, time_stamp):
        '''
 
-           pruning of the graph 
+           pruning of the graph according to the time_stamp. 
+           For each node, see the top of the queue, if the time is out of the 60 second window, pop the queue, use decrease the degree according to the degree_increase value
+
        '''
+       delete_node = []
+       for hashtag, queue in self.hash_nodeIncrease.iteritems():
+           s_temp = queue[0]
+           if is_valid(s_temp.created_at, time_stamp):
+               continue
+           
+           #if out of window, we should delete it
+           print("Adjust degree of node " + hashtag)
+           s_temp = queue.popleft()
+           degree_adjust = - s_temp.degree_increase
+           if len(queue) == 0:
+               delete_node.append(hashtag)
+           self.hash_nodeDegree[hashtag] = self.hash_nodeDegree[hashtag] + degree_adjust
+           self.num_total_degree = self.num_total_degree + degree_adjust
+           
+       self.num_nodes = self.num_nodes - len(delete_node)
+       if len(delete_node) >0:
+           print("Delete {0:3d} nodes".format(len(delete_node)))
+           for hashtag in delete_node:
+              # if the queue is empty, means that this node should be deleted
+              self.hash_nodeIncrease.pop(hashtag, None)
+              self.hash_nodeDegree.pop(hashtag, None)
        return
 
 
@@ -126,6 +151,15 @@ class HashtagGraph:
        node_keys = self.hash_nodeDegree.keys() 
        num_newnodes = len(set(hashtags) - set(node_keys) )
        return num_newnodes
+
+   def check_new_edge(self, timestamp, HashtagState_node1, HashtagState_node2):
+       '''
+            check if a new edge is added in timestamp 
+
+            compare timestamp with queue for both ends  
+       '''
+
+
 
    def empty(self):
        self.hash_nodeDegree = {}
