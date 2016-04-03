@@ -121,8 +121,11 @@ class HashtagGraph:
        except AttributeError:
            print("no output")
 
-   
-
+   def __str__(self): 
+       print("Number of nodes: {0:5d}".format(self.num_nodes))
+       print("Average degree: ")
+       for num in self.list_avg_Degree:
+           print("{0:.3f}".format(num))
 '''
 =================================================================
 '''
