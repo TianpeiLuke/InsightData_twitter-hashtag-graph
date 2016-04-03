@@ -30,4 +30,4 @@ For graph growing, we disucss cases as below:
 
 For graph pruning, we discuss cases as below:
    * At each step of graph growing, record the edge increase and the time into history FIFO queue. The top of the queue is the oldest step operations
-   * Retrieve the time, if the time is out of current maximum timestamp $- 60$, 
+   * Retrieve the time, if the time is out of current maximum timestamp - 60, pop the history queue, and reverse the corresponding operations.
