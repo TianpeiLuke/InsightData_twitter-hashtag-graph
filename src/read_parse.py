@@ -1,7 +1,22 @@
 import json
 import os
 
-
+ def graph_grow(hashtags, num_nodes, num_total_degree, hash_nodeDegree):
+    if len(hashtags) == 1:
+        return (num_nodes, num_total_degree, hash_nodeDegree)
+    num_newnodes = len(set(hashtags)-set(hash_nodeDegree.keys()))
+    if num_newnodes == 0:
+        return (num_nodes, num_total_degree, hash_nodeDegree)
+    num_nodes = num_nodes + num_newnodes
+    for hashtag in hashtags:
+        try:
+            hash_nodeDegree[hashtag] = hash_nodeDegree[hashtag] + num_newnodes
+        except KeyError:    
+            hash_nodeDegree[hashtag] = len(hashtags) - 1
+            num_total_degree = num_total_degree + len(hashtags) - 1
+        else:    
+            num_total_degree = num_total_degree + num_newnodes
+    return (num_nodes, num_total_degree, hash_nodeDegree)
 
 
 def read_tweet_one(txtfile):

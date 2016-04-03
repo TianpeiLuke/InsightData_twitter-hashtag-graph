@@ -6,9 +6,10 @@ import getopt
 from dateutil.parser import parse
 from datetime import datetime,timedelta
 
-class HashtagDegree:
+class HashtagGraph:
    '''
-    This is the main class that contains Hashtags Graph
+
+      This is the main class that contains Hashtags Graph
    '''
    def __init__(self):
        self.num_nodes = 0
@@ -35,13 +36,17 @@ class HashtagDegree:
            # parse tweet line
            hashtags, created_ats = parse_tweet(tweet_line)
            # grow graph
+           self.graph_grow(hashtags)
+           self.list_avg_Degree.append(float(self.num_total_degree) / float(self.num_nodes))
            #add code here
        
 
 
    def graph_grow(self, hashtags):
        '''
+
           use the hash table to store the total degree for each hashtag
+          modify the graph strcture for each given list of hashtags
        ''' 
        #add code here
        if len(hashtags) == 1:
@@ -58,7 +63,6 @@ class HashtagDegree:
            try: 
                self.hash_nodeDegree[hashtag] = self.hash_nodeDegree[hashtag] + num_newnodes 
            except KeyError:
-               print("Add new nodes")
                self.hash_nodeDegree[hashtag] = len(hashtags) - 1
                self.num_total_degree = self.num_total_degree + len(hashtags) - 1 
            else:
@@ -69,6 +73,10 @@ class HashtagDegree:
        return
 
    def count_new_nodes(self, hashtags):
+       '''
+
+          count number of new nodes in hashtag list
+       '''
        num_newnodes = 0
        if len(hashtags) == 1:
            #drop single hashtag
@@ -79,19 +87,29 @@ class HashtagDegree:
 
    def inputfile_open(self, input_filename):
        try:
-            self.inputfile = open(input_filename)
+            self.inputfile = open(input_filename , 'r' )
        except EnvironmentError:
             print 'open inputfile failure'
 
    def outputfile_open(self, output_filename):
        try:
-            self.outputfile = open(output_filename)
+            open(output_filename,"w").close()
        except EnvironmentError:
             print 'open outputfile failure'
+       else:
+            self.outputfile = open(output_filename , 'w')
+
 
    def write_txt(self, output_filename):
+       '''
+
+            Write to given file
+       '''
        self.outputfile_open(output_filename)
-       #add code here
+       #self.outputfile.write("\n".join(str(self.list_avg_Degree)))
+       for num in self.list_avg_Degree:
+            print >> self.outputfile, "{0:.3f}\n".format(num)
+
 
    def file_close(self):
        self.inputfile.close()
@@ -104,6 +122,7 @@ class HashtagDegree:
 '''
 def parse_tweet(tweet_line):
     '''
+
        Read one line of the tweet.txt file and parse it by json·
        The extracted "created_at" and "hashtags" are returned
        txtfile is the file handle created before calling the function
@@ -119,12 +138,14 @@ def parse_tweet(tweet_line):
 
 def parse_time(created_at):
     '''
+
        return datetime.datetime format 
     '''
     return parse(created_at, fuzzy=True)
 
 def is_valid(time_stamp, time_stamp_ref):
     '''
+
          time_stamp is the old time 
          time_stamp_ref is the current time 
          time_stamp is datetime.datetime(year, month, day, hour, min, secend, tzinfo=tzutc()) 
@@ -153,7 +174,7 @@ def main(argv):
     print 'Output file is "', outputfile
 
     #construct graph object
-    HashGraphObj = HashtagDegree()
+    HashGraphObj = HashtagGraph()
     #print("Graph construct")
     #HashGraphObj.graph_construct(inputfile)
     print("Running ... ")
