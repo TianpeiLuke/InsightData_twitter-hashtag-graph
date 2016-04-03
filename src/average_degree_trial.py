@@ -17,6 +17,9 @@ class HashtagGraph:
        self.hash_nodeDegree = {}
        self.hash_nodeTime = {}
        self.list_avg_Degree = []
+       self.maximum_timestamp = parse("Mon Jan 01 00:00:00 +0000 1000", fuzzy=True)
+
+
 
 #   def graph_construct(self, input_filename):
 #       self.inputfile_open(input_filename)
@@ -34,7 +37,9 @@ class HashtagGraph:
        self.inputfile_open(input_filename)
        for tweet_line in self.inputfile:
            # parse tweet line
-           hashtags, created_ats = parse_tweet(tweet_line)
+           hashtags, created_at = parse_tweet(tweet_line)
+           if parse_time(created_at) > self.maximum_timestamp:
+               self.maximum_timestamp = parse_time(created_at)
            # grow graph
            self.graph_grow(hashtags)
            self.list_avg_Degree.append(float(self.num_total_degree) / float(self.num_nodes))
@@ -84,6 +89,12 @@ class HashtagGraph:
        node_keys = self.hash_nodeDegree.keys() 
        num_newnodes = len(set(hashtags) - set(node_keys) )
        return num_newnodes
+
+   def empty(self):
+       self.hash_nodeDegree = {}
+       self.num_nodes = 0
+       self.num_total_degree = 0
+
 
    def inputfile_open(self, input_filename):
        try:
