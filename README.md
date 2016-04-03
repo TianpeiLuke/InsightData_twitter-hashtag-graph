@@ -21,8 +21,11 @@ The key to solve the degree counting problem is to answer the following question
 To save for memeory, we store all degree information in hash table of nodes. Also, note that all hashtags in one tweet form a fully connected graph. We can judge from the node list if an edge is present. 
 
 For graph growing, we disucss cases as below:
-  * If new node is present in a tweet, for all hashtag nodes in given tweet 
-     - If the node appears before, its degree will increase by the number of new nodes. Since they only need to add edges 
-     - If it is a new node, its degree is the total number of hashtags in given tweet minus one. (degree of a fully connected graph)
+  * For all hashtag nodes in a given tweet 
+     - If this is a new node, its degree is the total number of hashtags in given tweet minus one. (degree of a fully connected graph)
+     - If this node appears before, its degree increment includes two parts:
+          1. The edges that connect to the new node. This part of degree increase is the number of new nodes.
+          2. The edges that connect to an existing node. However, this edge does not appear in graph. In other word, the two end-nodes do not co-exist in previous tweets
+          3. The edges that connect to an existing node. Also, this edge appear in the graph. Or, the two end-nodes co-exist in one of the previous tweets. 
 
 
