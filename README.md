@@ -25,8 +25,8 @@ For graph growing, we disucss cases as below:
      - If this is a new node, its degree is the total number of hashtags in given tweet minus one. (degree of a fully connected graph)
      - If this node appears before, its degree increment includes two parts:
           1. The edges that connect to the new node. This part of degree increase is the number of new nodes.
-          2. The edges that connect to an existing node. However, this edge does not appear in graph. In other word, the two end-nodes do not co-exist in previous tweets. This is the second part. 
-          3. The edges that connect to an existing node. Also, this edge appear in the graph. Or, the two end-nodes co-exist in one of the previous tweets. 
+          2. The edges that connect to an existing node that also in the same tweet. However, this edge does not appear in graph. In other word, the two end-nodes do not co-exist in previous tweets. This is the second part. 
+          3. The edges that connect to an existing node in same tweet and this edge appear in the graph. Or, the two end-nodes co-exist in one of the previous tweets.  This part should not be included
 
 For graph pruning, we discuss cases as below:
    * At each step of graph growing, record the edge increase and the time into history FIFO queue. The top of the queue is the oldest step operations
