@@ -112,8 +112,14 @@ class HashtagGraph:
 
 
    def file_close(self):
-       self.inputfile.close()
-       self.outputfile.close()
+       try:
+           self.inputfile.close()
+       except AttributeError:
+           print("no input")
+       try:
+           self.outputfile.close()
+       except AttributeError:
+           print("no output")
 
    
 
