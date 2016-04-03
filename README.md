@@ -18,7 +18,7 @@ The key to solve the degree counting problem is to answer the following question
   * How to deal with out of order tweets ?
 
 ## Graph structure 
-To save for memeory, we store all degree information in hash table of nodes.Also, note that all hashtags in one tweet form a fully connected graph. We can judge from the node list if an edge is present. 
+To save for memeory, we store all degree information in hash table of nodes. Also, note that all hashtags in one tweet form a fully connected graph. We can judge from the node list if an edge is present. 
 
 For graph growing, we disucss cases as below:
   * If new node is present in a tweet, for all hashtag nodes in given tweet 
