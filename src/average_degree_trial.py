@@ -3,17 +3,19 @@ from __future__ import with_statement
 import os, sys
 import json
 import getopt
+from dateutil.parser import parse
+from datetime import datetime,timedelta
 
 class HashtagDegree:
    '''
     This is the main class that contains Hashtags Graph
    '''
    def __init__(self):
-       self.num_node = 0
-       self.total_degree = 0
-       self.nodeDegree_hash = []
-       self.nodeTime_hash = []
-       self.output = []
+       self.num_nodes = 0
+       self.num_total_degree = 0
+       self.hash_nodeDegree = {}
+       self.hash_nodeTime = {}
+       self.list_avg_Degree = []
 
 #   def graph_construct(self, input_filename):
 #       self.inputfile_open(input_filename)
@@ -30,24 +32,50 @@ class HashtagDegree:
        '''
        self.inputfile_open(input_filename)
        for tweet_line in self.inputfile:
-           hashtag_one_tweet, created_at_one_tweet  = parse_tweet(tweet_line)
-       
-       #add code here
+           # parse tweet line
+           hashtags, created_ats = parse_tweet(tweet_line)
+           # grow graph
+           #add code here
        
 
 
-   def graph_grow(self):
+   def graph_grow(self, hashtags):
        '''
-       
+          use the hash table to store the total degree for each hashtag
        ''' 
        #add code here
+       if len(hashtags) == 1:
+           #drop single hashtag
+           return 
+       
+       num_newnodes = self.count_new_nodes(hashtags)
+       if num_newnodes == 0:
+          return
+
+       print("Add {0:3d} nodes".format(num_newnodes))
+       self.num_nodes = self.num_nodes + num_newnodes
+       for hashtag in hashtags:
+           try: 
+               self.hash_nodeDegree[hashtag] = self.hash_nodeDegree[hashtag] + num_newnodes 
+           except KeyError:
+               print("Add new nodes")
+               self.hash_nodeDegree[hashtag] = len(hashtags) - 1
+               self.num_total_degree = self.num_total_degree + len(hashtags) - 1 
+           else:
+               self.num_total_degree = self.num_total_degree + num_newnodes
        return
 
    def graph_prune(self, time_stamp):
        return
 
-   def check_new_node(self, list_hashtag):
-       return True
+   def count_new_nodes(self, hashtags):
+       num_newnodes = 0
+       if len(hashtags) == 1:
+           #drop single hashtag
+           return num_newnodes
+       node_keys = self.hash_nodeDegree.keys() 
+       num_newnodes = len(set(hashtags) - set(node_keys) )
+       return num_newnodes
 
    def inputfile_open(self, input_filename):
        try:
@@ -89,6 +117,21 @@ def parse_tweet(tweet_line):
 
     return (hashtag_txt_list, created_at)
 
+def parse_time(created_at):
+    '''
+       return datetime.datetime format 
+    '''
+    return parse(created_at, fuzzy=True)
+
+def is_valid(time_stamp, time_stamp_ref):
+    '''
+         time_stamp is the old time 
+         time_stamp_ref is the current time 
+         time_stamp is datetime.datetime(year, month, day, hour, min, secend, tzinfo=tzutc()) 
+    '''
+    diff = time_stamp_ref - time_stamp
+    #diff_normal = divmod(diff.days * 86400 + diff.seconds, 60)
+    return ((diff.days == 0) and (diff.seconds < 60) )
 #=====================  main =================================
 def main(argv):
     inputfile = ''
