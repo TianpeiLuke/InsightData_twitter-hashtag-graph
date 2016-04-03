@@ -2,7 +2,6 @@
 from __future__ import with_statement
 import os, sys
 import json
-#from Queue import Queue
 from collections import deque
 import getopt
 from dateutil.parser import parse
@@ -12,6 +11,11 @@ class HashtagState:
     def __init__(self, created_at, degree_increase):
        self.created_at = created_at 
        self.degree_increase = degree_increase
+
+class HashtagHist:
+    def __init__(self, created_at, hashtags):
+       self.created_at = created_at
+       self.hashtags = hashtags
 
 class HashtagGraph:
    '''
@@ -23,6 +27,7 @@ class HashtagGraph:
        self.num_total_degree = 0
        self.hash_nodeDegree = {}
        self.hash_nodeIncrease = {}
+       self.queue_hist_hashtags = deque([])
        self.list_avg_Degree = []
        self.maximum_timestamp = parse("Mon Jan 01 00:00:00 +0000 1000", fuzzy=True)
        self.minimum_timestamp = parse("Mon Jan 01 00:00:00 +0000 3000", fuzzy=True)
@@ -39,7 +44,7 @@ class HashtagGraph:
        for tweet_line in self.inputfile:
            # parse tweet line
            count = count + 1
-           print("Line: {0:d}".format(count))
+           print("Line: {0:d} ===============================".format(count))
            hashtags, created_at = parse_tweet(tweet_line)
            timestamp = parse_time(created_at)
            if timestamp > self.maximum_timestamp:
@@ -48,14 +53,15 @@ class HashtagGraph:
                self.graph_prune(timestamp)
            elif not is_valid(timestamp, self.maximum_timestamp):
                #out of 60 second window
-               print("out of order in time and are outside the 60-second")
+               print("out of order in time and outside the 60-second")
                continue
-
            # grow graph
            self.graph_grow(hashtags, created_at)
            self.list_avg_Degree.append(float(self.num_total_degree) / float(self.num_nodes))
            print("Total nodes {0:3d}  Total Degrees {1:5d}".format(self.num_nodes, self.num_total_degree)) 
+           print("Degree distribution: ")
            print(self.hash_nodeDegree) 
+
 
        self.inputfile.close()
 
@@ -74,8 +80,20 @@ class HashtagGraph:
        # find the number of new nodes and parse current time
        num_newnodes = self.count_new_nodes(hashtags)
        timestamp = parse_time(created_at)
-       print("Add {0:3d} nodes".format(num_newnodes))
+       #print("Add {0:3d} nodes".format(num_newnodes))
        self.num_nodes = self.num_nodes + num_newnodes
+       #node degree adjustment: consider the case
+       #1.  when both ends of the edge exists previously but the edge itself is not included 
+       (node_degree_adjust, ifnewEdge) = self.node_degree_adjust(timestamp, hashtags)
+       if (ifnewEdge):
+           print("Edge adjustment")
+           print(node_degree_adjust)
+
+       if ( num_newnodes > 0 or ifnewEdge ):
+           # store history of hashtags
+           hashtag_hist_node = HashtagHist(timestamp, hashtags)
+           self.queue_hist_hashtags.append(hashtag_hist_node)
+
        for hashtag in hashtags:
            try: 
                self.hash_nodeDegree[hashtag] = self.hash_nodeDegree[hashtag] + num_newnodes 
@@ -83,23 +101,18 @@ class HashtagGraph:
                self.hash_nodeDegree[hashtag] = len(hashtags) - 1
                self.num_total_degree = self.num_total_degree + len(hashtags) - 1 
                #store the incremental degree and time
-               #q_temp = Queue()
                s_temp = HashtagState(created_at = timestamp, degree_increase = len(hashtags) - 1)
                q_temp = deque([s_temp])
                #q_temp.put(s_temp)
                self.hash_nodeIncrease[hashtag] = q_temp
            else:
-               if num_newnodes > 0:
-                  self.num_total_degree = self.num_total_degree + num_newnodes 
+               if (num_newnodes + node_degree_adjust[hashtag]) > 0 :
+                  self.hash_nodeDegree[hashtag] = self.hash_nodeDegree[hashtag] + node_degree_adjust[hashtag]
+                  self.num_total_degree = self.num_total_degree + num_newnodes + node_degree_adjust[hashtag] 
                   #store the incremental degree and time
-                  s_temp = HashtagState(created_at = timestamp, degree_increase = num_newnodes)
+                  s_temp = HashtagState(created_at = timestamp, degree_increase = num_newnodes + node_degree_adjust[hashtag])
                   self.hash_nodeIncrease[hashtag].append(s_temp)
                
-       #make up for new edges whose both ends exists.
-       #note that no new node is added, but the num_total_degree is increased
-       #hash_nodeIncrease and hash_nodeDegree both increases
-       if num_newnodes == 0:
-           print("No new nodes, check for new edges.")
          
 
        return
@@ -113,25 +126,35 @@ class HashtagGraph:
            For each node, see the top of the queue, if the time is out of the 60 second window, pop the queue, use decrease the degree according to the degree_increase value
 
        '''
+       # delete all out of window
+       # add here
+       try:
+           hashtag_hist_node = self.queue_hist_hashtags[0]
+       except IndexError:
+           return 
+
+       while( not is_valid(self.queue_hist_hashtags[0].created_at, time_stamp)):
+           self.queue_hist_hashtags.popleft()
+           if len(self.queue_hist_hashtags) == 0:
+              break
+
        delete_node = []
        for hashtag, queue in self.hash_nodeIncrease.iteritems():
-           s_temp = queue[0]
-           if is_valid(s_temp.created_at, time_stamp):
-               continue
+           while( not is_valid(queue[0].created_at, time_stamp)):
            
-           #if out of window, we should delete it
-           print("Adjust degree of node " + hashtag)
-           s_temp = queue.popleft()
-           degree_adjust = - s_temp.degree_increase
-           if len(queue) == 0:
-               delete_node.append(hashtag)
-           self.hash_nodeDegree[hashtag] = self.hash_nodeDegree[hashtag] + degree_adjust
-           self.num_total_degree = self.num_total_degree + degree_adjust
-           
-       self.num_nodes = self.num_nodes - len(delete_node)
-       if len(delete_node) >0:
-           print("Delete {0:3d} nodes".format(len(delete_node)))
-           for hashtag in delete_node:
+              #if out of window, we should delete it
+              print("Adjust degree of node " + hashtag)
+              s_temp = queue.popleft() # add more
+              degree_adjust = - s_temp.degree_increase
+              self.hash_nodeDegree[hashtag] = self.hash_nodeDegree[hashtag] + degree_adjust
+              self.num_total_degree = self.num_total_degree + degree_adjust
+              if len(queue) == 0:
+                   delete_node.append(hashtag)
+                   break
+       self.num_nodes = self.num_nodes - len(set(delete_node))
+       if len(set(delete_node)) >0:
+           print("Delete {0:3d} nodes".format(len(set(delete_node))))
+           for hashtag in set(delete_node):
               # if the queue is empty, means that this node should be deleted
               self.hash_nodeIncrease.pop(hashtag, None)
               self.hash_nodeDegree.pop(hashtag, None)
@@ -152,14 +175,59 @@ class HashtagGraph:
        num_newnodes = len(set(hashtags) - set(node_keys) )
        return num_newnodes
 
-   def check_new_edge(self, timestamp, HashtagState_node1, HashtagState_node2):
+
+   def node_degree_adjust(self, timestamp, hashtags):
        '''
-            check if a new edge is added in timestamp 
-
-            compare timestamp with queue for both ends  
+    
+           Given the current time, and hashtags, check previous time for every node in the hashtags. 
+           if two nodes in hashtags has the same time in history, then their edge is redundant, otherwise this edge is new. Both nodes add one degree
+ 
        '''
+       node_degree_adjust = {}
+       n_neighbor = len(hashtags) - 1
+       for hashtag in hashtags:
+           node_degree_adjust[hashtag] = 0
+
+       ifnewEdge = False
+       common_nodes = []
+       for hashtag_node in self.queue_hist_hashtags:
+           rep_nodes = [hashtag for hashtag in hashtags if hashtag in hashtag_node.hashtags ]
+           if len(rep_nodes) == 1:
+               common_nodes.append(rep_nodes[0]) #store repeated nodes
+           if len(rep_nodes) > 2: 
+               #repeated edges
+               for rep_node in rep_nodes:
+                   node_degree_adjust[rep_node] = node_degree_adjust[rep_node] - 1
+                      
+       for rep_node, value in node_degree_adjust.iteritems():
+           if value < 0:
+               node_degree_adjust[rep_node] = node_degree_adjust[rep_node] + n_neighbor 
+           if len(set(common_nodes)) > 1: 
+               # a new edge whose two ends both appear before but not form a repeated edge
+               if (rep_node in set(common_nodes)) and (node_degree_adjust[rep_node] == 0):
+                   node_degree_adjust[rep_node] = node_degree_adjust[rep_node] + n_neighbor
 
 
+       for rep_node, value in node_degree_adjust.iteritems():
+           if value > 0:
+               ifnewEdge = True
+               break
+
+       return (node_degree_adjust, ifnewEdge)
+
+#   def check_new_edge(self, hashtags):
+#       '''
+#            check if a new edge is added in timestamp 
+#
+#            compare timestamp with queue for both ends  
+#       '''
+#       ifnewEdge = True
+#       for hashtag_node in self.queue_hist_hashtags:
+#           temp = [hashtag for hashtag in hashtags if hashtag in hashtag_node.hashtags ]
+#           if len(temp) > 2:
+#              ifnewEdge = False
+#              break
+#       return ifnewEdge
 
    def empty(self):
        self.hash_nodeDegree = {}
@@ -167,7 +235,7 @@ class HashtagGraph:
        self.num_total_degree = 0
        self.maximum_timestamp = parse("Mon Jan 01 00:00:00 +0000 1000", fuzzy=True)
        self.minimum_timestamp = parse("Mon Jan 01 00:00:00 +0000 3000", fuzzy=True)
-       #self.queue_hist.empty()
+       self.queue_hist_hashtags.empty()
 
 
    def inputfile_open(self, input_filename):
