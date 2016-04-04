@@ -27,6 +27,7 @@ For graph growing, we disucss cases as below:
           1. The edges that connect to the new node. This part of degree increase is the number of new nodes.
           2. The edges that connect to an existing node that also in the same tweet. However, this edge does not appear in graph. In other word, the two end-nodes do not co-exist in previous tweets. This is the second part. 
           3. The edges that connect to an existing node in same tweet and this edge appear in the graph. Or, the two end-nodes co-exist in one of the previous tweets.  This part should not be included
+      - As discussed above, for node appears before, we first add the the total number of hashtags minus one. Then we find those previous records in which at least two nodes are common with one of them the given node. We delete the number of common nodes minus one as the redundant degree. 
 
 For graph pruning, we discuss cases as below:
    * At each step of graph growing, record the edge increase and the time into history FIFO queue. The top of the queue is the oldest step operations
