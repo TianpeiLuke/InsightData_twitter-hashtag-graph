@@ -4,6 +4,8 @@ This is for Insight Data Challenge. Created by Tianpei Xie.
 ## Overview
 I implemented two methods. The naive implementation 'average\_degree\_naive.py' and the hash-table implemenation 'average\_degree\_hash.py'.
 
+Please run 'bash ./run.sh' in root directory to test the performance. I included the 'example.txt', which contains the graph according to the provided demo. 
+
 ### Naive implementation
 The naive implementation computes the total number of degrees as the twice of the total number of the edges. Since all hashtags in a tweet form a complete graph, it uses the 'edge\_update' function to compute the size of edges in an union of $n$ complete graphs. This function uses the inclusion-exclusion principle to compute the union of n graphs as the union of new graph and the existing graph. It requies recursively compute the intersection of new graph with each graph formed by the previous hashtags 
 
