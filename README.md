@@ -2,12 +2,12 @@
 This is for Insight Data Challenge. Created by Tianpei Xie. 
 
 ## Overview
-I implemented two methods. The naive implementation `average\_degree\_naive.py` and the hash-table implemenation `average\_degree\_hash.py`.
+I implemented two methods. The naive implementation `average_degree_naive.py` and the hash-table implemenation `average_degree_hash.py` under `./src` directory.
 
 Please run `bash ./run.sh` in root directory to test the performance. I included the `./tweet_input/example.txt`, which contains the graph according to the provided demo. 
 
 ### Naive implementation
-The naive implementation computes the total number of degrees as the twice of the total number of the edges. Since all hashtags in a tweet form a complete graph, it uses the 'edge\_update' function to compute the size of edges in an union of $n$ complete graphs. This function uses the inclusion-exclusion principle to compute the union of n graphs as the union of new graph and the existing graph. It requies recursively compute the intersection of new graph with each graph formed by the previous hashtags 
+The naive implementation computes the total number of degrees as the twice of the total number of the edges. Since all hashtags in a tweet form a complete graph, it uses the `edge_update` function to compute the size of edges in an union of $n$ complete graphs. This function uses the inclusion-exclusion principle to compute the union of n graphs as the union of new graph and the existing graph. It requies recursively compute the intersection of new graph with each graph formed by the previous hashtags 
 
 It uses the fact that the intersection of $n$ complete graphs is a complete graph with node as the intersection of all nodes. And the number of edges for a complete graph is $p(p-1)/2$ for $p$ as the number of nodes. The algorithm is implemented naively using the recursion. The complexity is exponential in size of tweets within the window
 
@@ -15,7 +15,7 @@ It uses the fact that the intersection of $n$ complete graphs is a complete grap
 The hash-table implementation does not compute the edges. It maintained a hash-table of nodes with its node degree. It is efficient in storage, when the total number of nodes increases. Also it handles the graph growing procedure locally for each node. 
 
 
-For graph growing, it distinguishes different cases as below:
+For graph growing in `graph_grow` method , it distinguishes different cases as below:
   * For all hashtag nodes in a given tweet 
      - If this is a new node, its degree is the total number of hashtags in given tweet minus one. (degree of a fully connected graph)
      - If this node appears before, its degree increment includes two parts:
@@ -25,7 +25,7 @@ For graph growing, it distinguishes different cases as below:
       - As discussed above, for node appears before, we first add the the total number of hashtags minus one. Then we find those previous records in which at least two nodes are common with one of them the given node. We delete the number of common nodes minus one as the redundant degree. 
   *  I use a queue to maintain the sequence of input hashtags as well as its created time for time-window maintainance.  
 
-For graph pruning, I simply delete the record in history queue. And refresh the status variables such as node\_list, node\_degree, and rebuild the graph sequentially using the existing history record. That is not efficient, but easy to implement. 
+For graph pruning in `graph_prune`, I simply delete the record in history queue. And refresh the status variables such as node\_list, node\_degree, and rebuild the graph sequentially using the existing history record. That is not efficient, but easy to implement. 
 
 Note that since the graph growing prcedure just take care of the new nodes and nodes that are shared between new graph and old graph. It is more efficient.
 
