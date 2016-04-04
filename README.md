@@ -25,6 +25,8 @@ For graph growing, it distinguishes different cases as below:
 
 For graph pruning, I simply delete the record in history queue. And refresh the status variables such as node\_list, node\_degree, and rebuild the graph squentially using the existing history record. That is not efficient, but easy to implement. 
 
+Note that since the graph growing prcedure just take care of the new nodes and nodes that are shared between new graph and old graph. It is more efficient.
+
 ## Checklist 
 The key to solve the degree counting problem is to answer the following questions:
   * How to extract "Created Time", "Hashtag" from a given tweet ? 
