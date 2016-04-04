@@ -4,9 +4,15 @@ This is for Insight Data Challenge. Created by Tianpei Xie.
 ## Overview
 I implemented two methods. The naive implementation 'average\_degree\_naive.py' and the hash-table implemenation 'average\_degree\_hash.py'.
 
-The naive implemenation uses the 'edge\_update' function to compute the size of edges in an union of $n$ complete graphs.  
+### Naive implementation
+The naive implementation compute the total number of degrees as the twice of the total number of the edges. Since all hashtags in a tweet form a complete graph, it uses the 'edge\_update' function to compute the size of edges in an union of $n$ complete graphs. This function uses the inclusion-exclusion principle to compute the union of n graphs as the union of new graph and the existing graph. It requies recursively compute the intersection of new graph with each graph formed by the previous hashtags 
 
-## Solution strategy 
+It uses the fact that the intersection of $n$ complete graphs is a complete graph with node as the intersection of all nodes. And the number of edges for a complete graph is $p(p-1)/2$ for $p$ as the number of nodes. The algorithm is implemented naively using the recursion. The complexity is exponential in size of tweets within the window
+
+### Hash-table implementation
+The hash-table implementation does not compute the edges. It maintained a hash-table of nodes with its node degree.  
+
+## Checklist 
 The key to solve the degree counting problem is to answer the following questions:
   * How to extract "Created Time", "Hashtag" from a given tweet ? 
     - Done. See 'read\_parse.py' file
