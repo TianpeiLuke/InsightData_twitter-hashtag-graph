@@ -23,7 +23,7 @@ For graph growing, it distinguishes different cases as below:
       - As discussed above, for node appears before, we first add the the total number of hashtags minus one. Then we find those previous records in which at least two nodes are common with one of them the given node. We delete the number of common nodes minus one as the redundant degree. 
   *  I use a queue to maintain the sequence of input hashtags as well as its created time for time-window maintainance.  
 
-For graph pruning, I simply delete the record in history queue. And refresh the status variables such as node\_list, node\_degree, and rebuild the graph squentially using the existing history record. That is not efficient, but easy to implement. 
+For graph pruning, I simply delete the record in history queue. And refresh the status variables such as node\_list, node\_degree, and rebuild the graph sequentially using the existing history record. That is not efficient, but easy to implement. 
 
 Note that since the graph growing prcedure just take care of the new nodes and nodes that are shared between new graph and old graph. It is more efficient.
 
