@@ -59,7 +59,7 @@ class HashtagGraph:
            # grow graph
            self.graph_grow(hashtags, created_at)
            self.list_avg_Degree.append(float(self.num_total_degree) / float(self.num_nodes))
-           print("Total nodes {0:3d}  Total Degrees {1:5d}  Avg. Degree {2:.2f}".format(self.num_nodes, self.num_total_degree, self.list_avg_Degree[-1])) 
+           print("Total nodes {0:3d}  Total Degrees {1:5d}  Avg. Degree {2:.3f}".format(self.num_nodes, self.num_total_degree, self.list_avg_Degree[-1])) 
 
        self.inputfile.close()
 
@@ -231,7 +231,7 @@ class HashtagGraph:
            return
        #self.outputfile.write("\n".join(str(self.list_avg_Degree)))
        for num in self.list_avg_Degree:
-           print >> self.outputfile, "{0:.2f}".format(num)
+           print >> self.outputfile, "{0:.3f}".format(num)
        try:
            self.outputfile.close()
        except AttributeError:
