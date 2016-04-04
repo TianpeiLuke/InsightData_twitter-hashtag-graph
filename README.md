@@ -2,7 +2,7 @@
 This is for Insight Data Challenge. Created by Tianpei Xie. 
 
 ## Overview
-I implemented two methods. The naive implementation `average_degree_naive.py` and the hash-table implemenation `average_degree_hash.py` under `./src` directory. Both define a class called `HashtagGraph`
+I implemented two methods. The naive implementation `average_degree_naive.py` and the hash-table implemenation `average_degree_hash.py` under `./src` directory. Both define a class called `HashtagGraph`.
 
 Please run `bash ./run.sh` in root directory to test the performance. I included the `./tweet_input/example.txt`, which contains the graph according to the provided demo. 
 
