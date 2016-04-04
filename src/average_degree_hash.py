@@ -92,7 +92,7 @@ class HashtagGraph:
        self.num_nodes = self.num_nodes + num_newnodes
        #node degree adjustment: consider the case
        #1.  when both ends of the edge exists previously but the edge itself is not included 
-       (node_degree_adjust, ifnewEdge) = self.node_degree_adjust(timestamp, hashtags)
+       (node_degree_adjust, ifnewEdge, common_edges) = self.node_degree_adjust(timestamp, hashtags)
        if (ifnewEdge):
            print("Edge adjustment")
            print(node_degree_adjust)
@@ -132,31 +132,7 @@ class HashtagGraph:
            ifrebuild = True
            if len(self.queue_hist_hashtags_rep) == 0:
               break
-#           common_edge_nodes = []
-#                  common_edge_nodes.append(rep_nodes)
-#           k = len(old_hashtags)
-#           for hashtag in set(common_edge_nodes):
-#               #delete all out-of-window cases
-#               #if out of window, we should delete it
-#               #print("Adjust degree of node " + hashtag)
-#               if(not is_valid(self.hash_nodeIncrease[hashtag].created_at, time_stamp)):
-#                   s_temp = self.hash_nodeIncrease[hashtag].popleft()
-#               #s_temp = queue.popleft() # add more
-#               degree_adjust = - s_temp.degree_increase
-#               #delete too many edges, recover the intersection of the deleted edge and all after
-#               for sublist in common_edge_nodes:
-#                   if hashtag in sublist
-#
-#               self.hash_nodeDegree[hashtag] = self.hash_nodeDegree[hashtag] + degree_adjust
-#               self.num_total_degree = self.num_total_degree + degree_adjust
-#                      if len(queue) == 0:
-#                        delete_node.append(hashtag)
-#                      break
 
-#       while( not is_valid(self.queue_hist_hashtags[0].created_at, time_stamp)):
-#           self.queue_hist_hashtags.popleft()
-#           if len(self.queue_hist_hashtags) == 0:
-#              break
        if ifrebuild:
           print("rebuild graph")
           self.restart()
@@ -258,21 +234,8 @@ class HashtagGraph:
                node_degree_adjust[edge[0]] = node_degree_adjust[edge[0]] + 1
                node_degree_adjust[edge[1]] = node_degree_adjust[edge[1]] + 1
                ifnewEdge = True
-#       for rep_node, value in node_degree_adjust.iteritems():
-##           if value < 0:
-##               node_degree_adjust[rep_node] = node_degree_adjust[rep_node] + n_neighbor 
-#           if len(set(common_nodes)) > 1: 
-#               # a new edge whose two ends both appear before but not form a repeated edge
-#               if (rep_node in set(common_nodes)) and (rep_node not in set(common_edges)): #(node_degree_adjust[rep_node] == 0):
-#                   node_degree_adjust[rep_node] = node_degree_adjust[rep_node] + n_neighbor
-#
-#
-#       for rep_node, value in node_degree_adjust.iteritems():
-#           if value > 0:
-#               ifnewEdge = True
-#               break
 
-       return (node_degree_adjust, ifnewEdge)
+       return (node_degree_adjust, ifnewEdge, common_edges)
 #   def check_new_edge(self, hashtags):
 #       '''
 #            check if a new edge is added in timestamp 
